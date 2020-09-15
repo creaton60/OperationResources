@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: spinnaker
+    app.kubernetes.io/name: webtoon-op
+  name: message-collector-sandbox-deploy
+  namespace: sandbox
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: message-collector-sandbox
+  template:
+    metadata:
+      labels:
+        app: message-collector-sandbox
+        app.kubernetes.io/managed-by: spinnaker
+        app.kubernetes.io/name: webtoon-collector
+        pod-role.services.type: Service
+    spec:
+      containers:
+        - env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: sandbox
+          image: ''
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+                - name: Custom-Header
+                  value: Webtoon-Healthz
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: message-collector
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+                - name: Custom-Header
+                  value: Webtoon-Healthz
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 2800m
+              memory: 2048Mi
+            requests:
+              cpu: 1200m
+              memory: 1024Mi
+          volumeMounts:
+            - mountPath: /share-vol
+              name: share-vol
